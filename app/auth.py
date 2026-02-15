@@ -24,7 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 # HASH DE SENHA
 # ==========================================================
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
 
 
 def hash_senha(senha: str) -> str:
