@@ -1,25 +1,34 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database import get_db
 from app import models, schemas
-from app.auth import hash_senha, verificar_senha, criar_token
+from app.auth import hash_senha, criar_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=schemas.TokenResponse)
 def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
+
     try:
+        # ===============================
+        # 1️⃣ Verificar se slug já existe
+        # ===============================
         salon_existente = db.query(models.Salon).filter(
             models.Salon.slug == data.salon_slug
         ).first()
 
         if salon_existente:
-            raise HTTPException(status_code=400, detail="Slug já existe")
+            raise HTTPException(
+                status_code=400,
+                detail="Slug já existe"
+            )
 
+        # ===============================
+        # 2️⃣ Criar salão
+        # ===============================
         novo_salon = models.Salon(
             nome=data.salon_nome,
             slug=data.salon_slug
@@ -29,10 +38,15 @@ def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(novo_salon)
 
+        # ===============================
+        # 3️⃣ Criar usuário
+        # ===============================
+        senha_hash = hash_senha(data.senha)
+
         novo_user = models.User(
             nome=data.nome,
             email=data.email,
-            senha=hash_senha(data.senha),
+            senha=senha_hash,
             salon_id=novo_salon.id
         )
 
@@ -40,6 +54,9 @@ def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(novo_user)
 
+        # ===============================
+        # 4️⃣ Criar token
+        # ===============================
         token = criar_token(novo_user.id)
 
         return {
@@ -47,7 +64,7 @@ def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
             "token_type": "bearer"
         }
 
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
         raise HTTPException(
             status_code=400,
@@ -56,7 +73,8 @@ def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
 
     except Exception as e:
         db.rollback()
+        # 👇 AGORA MOSTRA ERRO REAL
         raise HTTPException(
             status_code=500,
-            detail="Erro interno no servidor"
+            detail=str(e)
         )
