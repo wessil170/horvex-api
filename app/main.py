@@ -3,8 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app import models
 from app.routes import salons, clientes, servicos, agendamentos, auth
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 
 app = FastAPI()
 
@@ -19,7 +17,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(ProxyHeadersMiddleware)
 
 # =========================
 # DATABASE
