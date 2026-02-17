@@ -12,7 +12,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # libera todas as origens (resolve problema da Vercel)
+    allow_origins=[
+       "https://horvex-web.vercel.app"
+],
+
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
