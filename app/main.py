@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 from app.database import engine, Base
 from app import models
 from app.routes import salons, clientes, servicos, agendamentos, auth
@@ -7,7 +8,16 @@ from app.routes import salons, clientes, servicos, agendamentos, auth
 app = FastAPI()
 
 # =========================
-# CORS DEFINITIVO (produção inicial)
+# PROXY (OBRIGATÓRIO NO RAILWAY)
+# =========================
+
+app.add_middleware(
+    ProxyHeadersMiddleware,
+    trusted_hosts="*"
+)
+
+# =========================
+# CORS (RAILWAY FRONTEND)
 # =========================
 
 app.add_middleware(
@@ -43,3 +53,4 @@ app.include_router(auth.router)
 @app.get("/")
 def root():
     return {"message": "Horvex API running"}
+
