@@ -13,9 +13,8 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-       "https://horvex-web.vercel.app"
-],
-
+        "https://horvex-web-production.up.railway.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
