@@ -1,4 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
+from datetime import datetime, time
+
 
 class SalonCreate(BaseModel):
     nome: str
@@ -13,19 +15,21 @@ class SalonResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 class ClienteCreate(BaseModel):
     nome: str
     telefone: str
-
+    observacoes: str | None = None
 
 class ClienteResponse(BaseModel):
     id: int
     salon_id: int
     nome: str
     telefone: str
-
+    observacoes: str | None
     class Config:
         from_attributes = True
+
 class ServicoCreate(BaseModel):
     nome: str
     preco: float
@@ -41,21 +45,21 @@ class ServicoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
 class AgendamentoCreate(BaseModel):
     cliente_id: int
     servico_id: int
-    data: str
-    horario: str
-    status: str = "agendado"
-
+    profissional_id: int
+    inicio: datetime
 
 class AgendamentoResponse(BaseModel):
     id: int
     salon_id: int
     cliente_id: int
     servico_id: int
-    data: str
-    horario: str
+    profissional_id: int
+    inicio: datetime
+    fim: datetime
     status: str
 
     class Config:
@@ -77,3 +81,41 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+class ProfissionalCreate(BaseModel):
+    nome: str
+
+
+class ProfissionalResponse(BaseModel):
+    id: int
+    salon_id: int
+    nome: str
+
+    class Config:
+        from_attributes = True
+
+class HorarioProfissionalCreate(BaseModel):
+    dia_semana: int
+    abertura: time
+    fechamento: time
+
+
+class HorarioProfissionalResponse(BaseModel):
+    id: int
+    profissional_id: int
+    dia_semana: int
+    abertura: time
+    fechamento: time
+
+    class Config:
+        from_attributes = True
+
+
+class AgendamentoPublicoCreate(BaseModel):
+    nome: str
+    telefone: str
+    data: str
+    horario: str
+    servico_id: int
+    profissional_id: int
+    slug: str

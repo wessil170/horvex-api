@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -15,24 +15,26 @@ from app import models
 # CONFIGURAÇÕES JWT
 # ==========================================================
 
-SECRET_KEY = "supersecretkey"  # ⚠️ Trocar em produção
+SECRET_KEY = "supersecretkey"  # ⚠️ Colocar em variável de ambiente depois
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 # ==========================================================
-# HASH DE SENHA
+# HASH DE SENHA (bcrypt puro)
 # ==========================================================
 
-pwd_context = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
-
-
 def hash_senha(senha: str) -> str:
-    return pwd_context.hash(senha)
+    senha_bytes = senha.encode("utf-8")
+    hashed = bcrypt.hashpw(senha_bytes, bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
 def verificar_senha(senha: str, hash: str) -> bool:
-    return pwd_context.verify(senha, hash)
+    return bcrypt.checkpw(
+        senha.encode("utf-8"),
+        hash.encode("utf-8")
+    )
 
 
 # ==========================================================
@@ -50,7 +52,7 @@ def criar_token(user_id: int) -> str:
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload = {
-        "sub": str(user_id),  # padrão JWT
+        "sub": str(user_id),
         "exp": expire
     }
 

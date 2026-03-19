@@ -26,6 +26,7 @@ def criar_cliente(
     novo_cliente = models.Cliente(
         nome=cliente.nome,
         telefone=cliente.telefone,
+        observacoes=cliente.observacoes,
         salon_id=current_salon.id
     )
 
@@ -34,3 +35,72 @@ def criar_cliente(
     db.refresh(novo_cliente)
 
     return novo_cliente
+
+@router.put("/{cliente_id}")
+def atualizar_cliente(
+    cliente_id: int,
+    cliente: schemas.ClienteCreate,
+    db: Session = Depends(get_db),
+    current_salon = Depends(get_current_salon)
+):
+
+    db_cliente = db.query(models.Cliente).filter(
+        models.Cliente.id == cliente_id,
+        models.Cliente.salon_id == current_salon.id
+    ).first()
+
+    if not db_cliente:
+        return {"erro": "Cliente não encontrado"}
+
+    db_cliente.nome = cliente.nome
+    db_cliente.telefone = cliente.telefone
+    db_cliente.observacoes = cliente.observacoes
+
+    db.commit()
+    db.refresh(db_cliente)
+
+    return db_cliente
+
+@router.put("/{cliente_id}", response_model=schemas.ClienteResponse)
+def atualizar_cliente(
+    cliente_id: int,
+    cliente: schemas.ClienteCreate,
+    db: Session = Depends(get_db),
+    current_salon = Depends(get_current_salon)
+):
+
+    db_cliente = db.query(models.Cliente).filter(
+        models.Cliente.id == cliente_id,
+        models.Cliente.salon_id == current_salon.id
+    ).first()
+
+    if not db_cliente:
+        return {"erro": "Cliente não encontrado"}
+
+    db_cliente.nome = cliente.nome
+    db_cliente.telefone = cliente.telefone
+    db_cliente.observacoes = cliente.observacoes
+
+    db.commit()
+    db.refresh(db_cliente)
+
+    return db_cliente
+@router.delete("/{cliente_id}")
+def deletar_cliente(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    current_salon = Depends(get_current_salon)
+):
+
+    cliente = db.query(models.Cliente).filter(
+        models.Cliente.id == cliente_id,
+        models.Cliente.salon_id == current_salon.id
+    ).first()
+
+    if not cliente:
+        return {"erro": "Cliente não encontrado"}
+
+    db.delete(cliente)
+    db.commit()
+
+    return {"mensagem": "Cliente deletado"}

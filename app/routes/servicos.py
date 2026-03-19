@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+
 from app.database import SessionLocal
 from app import models, schemas
-from app.auth import get_current_user  # IMPORTANTE
+from app.auth import get_current_user
 
 router = APIRouter(prefix="/servicos", tags=["Servicos"])
 
@@ -15,15 +16,16 @@ def get_db():
         db.close()
 
 
-# 🔐 CREATE SERVIÇO (PROTEGIDO E SEGURO)
+# 🔐 CREATE SERVIÇO
 @router.post("/", response_model=schemas.ServicoResponse)
 def create_servico(
     servico: schemas.ServicoCreate,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+
     db_servico = models.Servico(
-        salon_id=current_user.salon_id,  # vem do token
+        salon_id=current_user.salon_id,
         nome=servico.nome,
         preco=servico.preco,
         duracao=servico.duracao,
@@ -36,18 +38,19 @@ def create_servico(
     return db_servico
 
 
-# 🔐 LISTAR SERVIÇOS DO SALÃO LOGADO
+# 🔐 LISTAR SERVIÇOS
 @router.get("/", response_model=list[schemas.ServicoResponse])
 def list_servicos(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+
     return db.query(models.Servico).filter(
         models.Servico.salon_id == current_user.salon_id
     ).all()
 
 
-# 🔐 UPDATE SERVIÇO (SÓ DO PRÓPRIO SALÃO)
+# 🔐 UPDATE SERVIÇO
 @router.put("/{servico_id}", response_model=schemas.ServicoResponse)
 def update_servico(
     servico_id: int,
@@ -55,6 +58,7 @@ def update_servico(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+
     db_servico = db.query(models.Servico).filter(
         models.Servico.id == servico_id,
         models.Servico.salon_id == current_user.salon_id
@@ -71,3 +75,31 @@ def update_servico(
     db.refresh(db_servico)
 
     return db_servico
+
+
+# 🔐 DELETE SERVIÇO
+@router.delete("/{servico_id}")
+def deletar_servico(
+    servico_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+
+    servico = db.query(models.Servico).filter(
+        models.Servico.id == servico_id,
+        models.Servico.salon_id == current_user.salon_id
+    ).first()
+
+    if not servico:
+        raise HTTPException(status_code=404, detail="Serviço não encontrado")
+
+    db.delete(servico)
+    db.commit()
+
+    return {"mensagem": "Serviço deletado com sucesso"}
+
+@router.get("/salon/{salon_id}")
+def get_servicos_por_salao(salon_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Servico)\
+        .filter(models.Servico.salon_id == salon_id)\
+        .all()
