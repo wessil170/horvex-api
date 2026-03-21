@@ -68,14 +68,29 @@ def criar_agendamento(
 # LISTAR AGENDAMENTOS DO SALÃO
 # =========================================
 
-@router.get("/", response_model=list[schemas.AgendamentoResponse])
+@router.get("/")
 def listar_agendamentos(
     db: Session = Depends(get_db),
     salon: models.Salon = Depends(get_current_salon)
 ):
-    return db.query(models.Agendamento).filter(
+    agendamentos = db.query(models.Agendamento).filter(
         models.Agendamento.salon_id == salon.id
     ).all()
+
+    resultado = []
+
+    for ag in agendamentos:
+        resultado.append({
+            "id": ag.id,
+            "inicio": ag.inicio,
+            "fim": ag.fim,
+            "cliente": ag.cliente.nome if ag.cliente else None,
+            "servico": ag.servico.nome if ag.servico else None,
+            "profissional": ag.profissional.nome if ag.profissional else None
+        })
+
+    return resultado
+
 
 @router.get("/dia/{data}", response_model=list[schemas.AgendamentoResponse])
 def agenda_por_dia(
@@ -200,7 +215,7 @@ def horarios_disponiveis(
 
     horario_atual = abertura
 
-    while horario_atual <= fechamento:
+    while horario_atual + timedelta(minutes=duracao) <= fechamento:
 
         inicio = horario_atual
         fim = inicio + timedelta(minutes=duracao)
