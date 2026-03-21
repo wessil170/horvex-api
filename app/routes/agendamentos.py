@@ -92,7 +92,7 @@ def listar_agendamentos(
     return resultado
 
 
-@router.get("/dia/{data}", response_model=list[schemas.AgendamentoResponse])
+@router.get("/dia/{data}"
 def agenda_por_dia(
     data: str,
     db: Session = Depends(get_db),
