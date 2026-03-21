@@ -40,7 +40,7 @@ def criar_agendamento(
         models.Agendamento.status != "cancelado",
         models.Agendamento.inicio < fim,
         models.Agendamento.fim > inicio
-    ).with_for_update().first()
+    ).first()
 
     if conflito:
         raise HTTPException(
