@@ -92,7 +92,7 @@ def listar_agendamentos(
     return resultado
 
 
-@router.get("/dia/{data}"
+@router.get("/dia/{data}")
 def agenda_por_dia(
     data: str,
     db: Session = Depends(get_db),
